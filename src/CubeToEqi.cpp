@@ -80,6 +80,7 @@ static void inline bgra2float(float *red, float *green, float *blue, unsigned ch
 bool CreateEquirectangularImage(string* faces, string &folder)
 {
     CVTFFile faceVTFs[6];
+    int maxSize = 0;
 
     for (int i = 0; i < 6; i++)
     {
@@ -89,11 +90,17 @@ bool CreateEquirectangularImage(string* faces, string &folder)
             printf("Error: Unable to load image '%s'\n", faces[i]);
             return false;
         }
+        else
+        {
+            maxSize = max(maxSize, faceVTFs[i].GetWidth());
+            maxSize = max(maxSize, faceVTFs[i].GetHeight());
+        }
     }
     
     ILuint equiTexture = ilGenImage();
-    ILuint outputWidth = 4096;
+    ILuint outputWidth = maxSize * 4;
     ILuint outputHeight = outputWidth / 2;
+    printf("Will create hdr with dimensions %i x %i\n", outputWidth, outputHeight);
     ilBindImage(equiTexture);
     ilActiveImage(equiTexture);
     ilActiveLayer(0);
