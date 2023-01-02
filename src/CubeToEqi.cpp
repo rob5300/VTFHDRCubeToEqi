@@ -62,19 +62,18 @@ void FindCubemapFacesInFolder(string &folder, string* cubemapFacesPaths)
     }
 }
 
-//From: https://www.graphics.cornell.edu/%7Ebjw/rgbe/rgbe.c
-static inline void rgbe2float(float *red, float *green, float *blue, unsigned char bgre[4])
+//Decode bgra to floating point HDR (https://developer.valvesoftware.com/wiki/Valve_Texture_Format)
+static void inline bgra2float(float *red, float *green, float *blue, unsigned char bgra[4])
 {
-  const float max = 256 * 16.0;
-
-  if (bgre[3]) {   /*nonzero pixel*/
-    float f = (bgre[3]) * 16.0;
-    *red = (bgre[2] * f) / max;
-    *green = (bgre[1] * f) / max;
-    *blue = (bgre[0] * f) / max;
-  }
-  else
-    *red = *green = *blue = 0.0;
+    const int ratio = 262144;
+    if (bgra[3]) {
+        float a = bgra[3] * 16;
+        *red = (bgra[2] * a) / ratio;
+        *green = (bgra[1] * a) / ratio;
+        *blue = (bgra[0] * a) / ratio;
+    }
+    else
+        *red = *green = *blue = 0.0;
 }
 
 //Ported from: https://github.com/Mapiarz/CubemapToEquirectangular
@@ -159,6 +158,7 @@ bool CreateEquirectangularImage(string* faces, string &folder)
             else if (ya == 1)
             {
                 //Up
+                //x and y changed to rotate + flip img
                 yPixel = (((xa + 1.0) / 2.0));
                 xPixel = 1.0 - (((za + 1.0) / 2.0));
                 cubeFace = TOP;
@@ -207,7 +207,8 @@ bool CreateEquirectangularImage(string* faces, string &folder)
                 auto height = faceVTF->GetHeight();
 
                 //Handle rectangular faces as if they were square and clamp y to bottom.
-                if (height == width * 0.5)
+                bool halfHorizon = height == width * 0.5;
+                if (halfHorizon)
                 {
                     height = width;
                     yPixel = min(yPixel, 0.5);
@@ -215,13 +216,19 @@ bool CreateEquirectangularImage(string* faces, string &folder)
 
                 int realX = xPixel * width;
                 int realY = yPixel * height;
+
+                if (halfHorizon)
+                {
+                    realY = min(faceVTF->GetHeight() - 1, realY);
+                }
+
                 //printf("* Set pixel (%i, %i) from. Source pixel (%i, %i) from face '%s'\n", i, j, (int)(xPixel * width), (int)(yPixel * height), CubemapFaceNames[cubeFace].c_str());
                 auto vtfData = faceVTF->GetData(0, 0, 0, 0);
                 color = GetPixel(realX, realY, width, height, vtfData);
                 if (color != nullptr)
                 {
                     float newPixelData[3];
-                    rgbe2float(&newPixelData[0], &newPixelData[1], &newPixelData[2], color);
+                    bgra2float(&newPixelData[0], &newPixelData[1], &newPixelData[2], color);
                     ilSetPixels(i, j, 0, 1, 1, 1, IL_RGB, IL_FLOAT, newPixelData);
                 }
                 else
