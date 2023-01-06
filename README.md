@@ -2,6 +2,8 @@
 
 Creates a modern HDR equirectangular image from 6 VTF HDR cubemap faces (up, lf, ft, rt, bk, dn).
 
+![Before and after example](https://i.imgur.com/d1xSpmY.png)
+
 Uses [VTFLib](https://github.com/NeilJed/VTFLib) for reading VTF files and [DevIL](https://github.com/DentonW/DevIL) to create HDR image.
 
 Projection conversion code is a port of [CubemapToEquirectangular](https://github.com/Mapiarz/CubemapToEquirectangular) for Unity.
