@@ -206,6 +206,10 @@ bool CreateEquirectangularImage(string* faces, string &folder)
             xPixel = abs(xPixel);
             yPixel = abs(yPixel);
 
+            //Clamp pixels to avoid border pixels
+            xPixel = min(max(0.001, xPixel), 0.999);
+            yPixel = min(max(0.001, yPixel), 0.999);
+
             //Get pixel from cube face tex and set in main texture
             if (cubeFace >= 0 && cubeFace < 6)
             {
