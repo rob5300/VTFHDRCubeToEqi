@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <vector>
 #include "IL.h"
 #include "VTFLib.h"
 
@@ -100,7 +101,7 @@ bool CreateEquirectangularImage(string* faces, string &folder)
     ILuint equiTexture = ilGenImage();
     ILuint outputWidth = maxSize * 4;
     ILuint outputHeight = outputWidth / 2;
-    printf("Will create hdr with dimensions %i x %i\n", outputWidth, outputHeight);
+    printf("Creating hdr with dimensions %i x %i...\n", outputWidth, outputHeight);
     ilBindImage(equiTexture);
     ilActiveImage(equiTexture);
     ilActiveLayer(0);
@@ -256,15 +257,7 @@ bool CreateEquirectangularImage(string* faces, string &folder)
         }
     }
 
-    char savePath[512];
-    strcpy_s(savePath, folder.c_str());
-    strcat_s(savePath, "\\cubemap_hdr.hdr");
-    if (filesystem::exists(savePath))
-    {
-        filesystem::remove(savePath);
-    }
-    ilSave(IL_HDR, savePath);
-    printf("Saved hdr image to '%s'\n", savePath);
+    return true;
 }
 
 bool ConvertCubemapToEquirectangular(string cubemapFaceFolder)
@@ -281,30 +274,57 @@ bool ConvertCubemapToEquirectangular(string cubemapFaceFolder)
         }
     }
 
-    return CreateEquirectangularImage(faces, cubemapFaceFolder);
+    printf("Found all 6 cubemap faces\n");
+    bool imageCreated = CreateEquirectangularImage(faces, cubemapFaceFolder);
+    if (imageCreated)
+    {
+        //Create new filename to be the main name of the cubemap
+        auto filename = filesystem::path(faces[0]).filename().string();
+        filename.resize(filename.length() - 6);
+
+        string savePath = cubemapFaceFolder + "\\"s + filename + ".hdr"s;
+        if (filesystem::exists(savePath))
+        {
+            filesystem::remove(savePath);
+        }
+        ilSave(IL_HDR, savePath.c_str());
+        printf("Done! Saved hdr image to '%s'\n", savePath.c_str());
+    }
 }
 
 int main(int argc, char *argv[])
 {
     cout << "Cube to Equi converter by rob5300.\n";
-    string targetFolder;
+    vector<string>* targetFolders;
     if (argc > 1)
     {
-        targetFolder = string(argv[1]);
+        targetFolders = new vector<string>(argc - 1);
+        for (int i = 0; i < argc - 1; i++)
+        {
+            (*targetFolders)[i] = string(argv[i + 1]);
+        }
     }
     else
     {
+        targetFolders = new vector<string>(1);
         cout << "Enter target folder:\n";
-        getline(cin, targetFolder);
+        getline(cin, (*targetFolders)[0]);
     }
 
-    if (filesystem::is_directory(targetFolder))
+    for (int i = 0; i < (*targetFolders).size(); i++)
     {
-        ilInit();
-        ConvertCubemapToEquirectangular(targetFolder);
+        auto folder = (*targetFolders)[i];
+        if (filesystem::is_directory(folder))
+        {
+            ilInit();
+            printf("-> Input folder: '%s'.\n", folder.c_str());
+            ConvertCubemapToEquirectangular(folder);
+        }
+        else
+        {
+            printf("Error: '%s' is not a directory.", folder);
+        }
     }
-    else
-    {
-        printf("Error: '%s' is not a directory.", targetFolder);
-    }
+
+    delete targetFolders;
 }
