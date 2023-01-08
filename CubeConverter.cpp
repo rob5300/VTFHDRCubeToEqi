@@ -12,10 +12,10 @@ string CubeConverter::CubemapFaceNames[6] = {
 	"up.vtf", "lf.vtf", "ft.vtf", "rt.vtf", "bk.vtf", "dn.vtf"
 };
 
-inline void OffsetTargetXY(int x, int y, int height, int width, ConvertOptions& options)
+inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions& options)
 {
     x += (width * options.xOffset);
-    if (x > width)
+    if (x >= width)
     {
         x -= width;
     }
@@ -25,7 +25,7 @@ inline void OffsetTargetXY(int x, int y, int height, int width, ConvertOptions& 
     }
 
     y += (height * options.yOffset);
-    if (y > height)
+    if (y >= height)
     {
         y -= height;
     }
@@ -74,8 +74,6 @@ int CubeConverter::DoConvertion(int maxCubeFaceSize)
 
         for (int i = 0; i < outputWidth; i++)
         {
-            OffsetTargetXY(i, j, outputWidth, outputHeight, options);
-
             //Columns start from the left
             u = ((float)i / (float)outputWidth);
             phi = u * 2.0 * M_PI;
@@ -173,6 +171,7 @@ int CubeConverter::DoConvertion(int maxCubeFaceSize)
 
                 if (color != nullptr)
                 {
+                    OffsetTargetXY(i, j, outputWidth, outputHeight, options);
                     SetTargetPixel(i, j, color);
                 }
                 else

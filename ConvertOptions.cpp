@@ -14,12 +14,14 @@ bool ConvertOptions::HandleArgument(char* arg, char* data)
 	{
 		assert(data != nullptr, "xoffset did not have data");
 		xOffset = std::stof(data);
+		printf("xoffset set to '%f'\n", xOffset);
 		return true;
 	}
 	else if (strcmp(arg, "-yoffset") == 0)
 	{
 		assert(data != nullptr, "yoffset did not have data");
 		yOffset = std::stof(data);
+		printf("yoffset set to '%f'\n", yOffset);
 		return true;
 	}
 	else if (strcmp(arg, "-help") == 0)
@@ -29,7 +31,7 @@ bool ConvertOptions::HandleArgument(char* arg, char* data)
 	}
 	else
 	{
-		printf("Unknown argument '%s'.", arg);
+		printf("Unknown argument '%s'.\n", arg);
 		exit(1);
 	}
 
