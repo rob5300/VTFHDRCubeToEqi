@@ -11,3 +11,6 @@ Projection conversion code is a port of [CubemapToEquirectangular](https://githu
 ## Usage
 
 Start program and give folder containing all 6 faces, or pass path as launch arg.
+
+### Arguments:
+``xoffset, yoffset`` (0 - 1): Offset the final HDR, useful if you want to rotate the hdr but cannot in some software.
