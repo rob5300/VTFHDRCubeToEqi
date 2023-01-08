@@ -133,10 +133,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConvertOptions.cpp" />
+    <ClCompile Include="ConvertOptions.h" />
+    <ClCompile Include="CubeConverter.cpp" />
+    <ClCompile Include="ImageCubeConverter.cpp" />
     <ClCompile Include="src\CubeToEqi.cpp" />
+    <ClCompile Include="VTFCubeConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CubeConverter.h" />
+    <ClInclude Include="CubemapFaces.h" />
     <ClInclude Include="ext\VTFLib.h" />
+    <ClInclude Include="ImageCubeConverter.h" />
+    <ClInclude Include="VTFCubeConverter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
