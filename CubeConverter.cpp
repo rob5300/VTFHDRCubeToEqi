@@ -12,9 +12,9 @@ string CubeConverter::CubemapFaceNames[6] = {
 	"up.vtf", "lf.vtf", "ft.vtf", "rt.vtf", "bk.vtf", "dn.vtf"
 };
 
-inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions& options)
+inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions* options)
 {
-    x += (width * options.xOffset);
+    x += (width * options->xOffset);
     if (x >= width)
     {
         x -= width;
@@ -24,7 +24,7 @@ inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions
         x += width;
     }
 
-    y += (height * options.yOffset);
+    y += (height * options->yOffset);
     if (y >= height)
     {
         y -= height;
@@ -35,7 +35,7 @@ inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions
     }
 }
 
-CubeConverter::CubeConverter(std::string path, ConvertOptions options)
+CubeConverter::CubeConverter(std::string path, ConvertOptions* options)
 {
 	this->path = path;
 	this->options = options;
@@ -48,15 +48,15 @@ bool CubeConverter::Convert(std::string* faces)
 }
 
 //Ported from: https://github.com/Mapiarz/CubemapToEquirectangular
-int CubeConverter::DoConvertion(int maxCubeFaceSize)
+ILuint CubeConverter::DoConvertion(int maxCubeFaceSize)
 {
-	ILuint equiTexture = ilGenImage();
+	targetImageId = ilGenImage();
     ILuint outputWidth = maxCubeFaceSize * 4;
+    outputWidth *= options->scale;
     ILuint outputHeight = outputWidth / 2;
     printf("Creating hdr with dimensions %i x %i...\n", outputWidth, outputHeight);
-    ilBindImage(equiTexture);
-    ilActiveImage(equiTexture);
-    ilActiveLayer(0);
+    
+    ActivateTargetImage();
     
     //Create image in devIL
     CreateNewImage(outputWidth, outputHeight);
@@ -177,18 +177,18 @@ int CubeConverter::DoConvertion(int maxCubeFaceSize)
                 else
                 {
                     printf("Failed to get valid colour from face '%i' at pos %f, %f\n", cubeFace, xPixel, yPixel);
-                    return -1;
+                    return UINT_MAX;
                 }
             }
             else
             {
                 printf("Invalid cube face use during conversion\n");
-                return -1;
+                return UINT_MAX;
             }
         }
     }
 
-    return equiTexture;
+    return targetImageId;
 }
 
 void CubeConverter::CreateNewImage(int width, int height)
@@ -205,6 +205,13 @@ unsigned char* CubeConverter::GetSourcePixel(float x, float y, int cubeFace)
 void CubeConverter::SetTargetPixel(int x, int y, void* colour)
 {
 
+}
+
+void CubeConverter::ActivateTargetImage()
+{
+    ilBindImage(targetImageId);
+    ilActiveImage(targetImageId);
+    ilActiveLayer(0);
 }
 
 //Get pointer to start of pixel data for this specific image

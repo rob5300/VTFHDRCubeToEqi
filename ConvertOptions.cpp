@@ -5,6 +5,7 @@ inline void ArgHelp()
 {
     printf("Argument Help:\n");
     printf(" -xoffset (0-1), -yoffset (0-1): How much to offset the output image by.\n");
+    printf(" -scale 0<: Scale adjustment for output hdr. Default is 1\n");
     printf(" -help: Show this help info.\n");
 }
 
@@ -22,6 +23,21 @@ bool ConvertOptions::HandleArgument(char* arg, char* data)
 		assert(data != nullptr, "yoffset did not have data");
 		yOffset = std::stof(data);
 		printf("yoffset set to '%f'\n", yOffset);
+		return true;
+	}
+	else if (strcmp(arg, "-scale") == 0)
+	{
+		assert(data != nullptr, "Scale did not have data");
+		scale = std::stof(data);
+		if (scale == 0)
+		{
+			printf("Scale cannot be 0.\n");
+			scale = 1;
+		}
+		else
+		{
+			printf("scale set to '%f'\n", scale);
+		}
 		return true;
 	}
 	else if (strcmp(arg, "-help") == 0)

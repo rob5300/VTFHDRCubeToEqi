@@ -8,7 +8,7 @@
 class CubeConverter
 {
 public:
-	CubeConverter(std::string path, ConvertOptions options);
+	CubeConverter(std::string path, ConvertOptions* options);
 	//Begin Conversion
 	virtual bool Convert(std::string* faces);
 
@@ -22,13 +22,16 @@ protected:
 	//Source file/files path
 	std::string path;
 	//Conversion options
-	ConvertOptions options;
+	ConvertOptions* options;
+	//Target hdr image id
+	ILuint targetImageId;
 	//Start main conversion loop
-	int DoConvertion(int maxCubeFaceSize);
+	ILuint DoConvertion(int maxCubeFaceSize);
 	//Create new target image in DevIL
 	virtual void CreateNewImage(int width, int height);
 	//Get colour from source cube face at pos
 	virtual unsigned char* GetSourcePixel(float x, float y, int cubeFace);
 	//Set new colour on target image at pos
 	virtual void SetTargetPixel(int x, int y, void* colour);
+	void ActivateTargetImage();
 };

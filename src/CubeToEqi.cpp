@@ -11,7 +11,7 @@
 
 using namespace std;
 
-bool ConvertCubemapToEquirectangular(string cubemapFaceFolder, ConvertOptions& options)
+bool ConvertCubemapToEquirectangular(string cubemapFaceFolder, ConvertOptions* options)
 {
     string faces[6];
     CubeConverter::FindCubemapFacesInFolder(cubemapFaceFolder, faces);
@@ -31,10 +31,10 @@ bool ConvertCubemapToEquirectangular(string cubemapFaceFolder, ConvertOptions& o
         converter = new ImageCubeConverter(cubemapFaceFolder, options);
     }
 
-    int createdImageId = converter->Convert(faces);
+    ILuint createdImageId = converter->Convert(faces);
     delete converter;
     converter = nullptr;
-    if (createdImageId != -1)
+    if (createdImageId != UINT_MAX)
     {
         //Create new filename to be the main name of the cubemap
         auto filename = filesystem::path(faces[0]).filename().string();
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         {
             ilInit();
             printf("-> Input folder: '%s'.\n", folder.c_str());
-            ConvertCubemapToEquirectangular(folder, options);
+            ConvertCubemapToEquirectangular(folder, &options);
         }
         else
         {

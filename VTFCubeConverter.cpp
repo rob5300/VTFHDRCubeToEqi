@@ -4,7 +4,7 @@
 
 using namespace std;
 
-VTFCubeConverter::VTFCubeConverter(std::string path, ConvertOptions options) : CubeConverter(path, options)
+VTFCubeConverter::VTFCubeConverter(std::string path, ConvertOptions* options) : CubeConverter(path, options)
 {
 }
 

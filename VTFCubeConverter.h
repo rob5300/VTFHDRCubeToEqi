@@ -4,7 +4,7 @@
 class VTFCubeConverter : public CubeConverter
 {
 public:
-	VTFCubeConverter(std::string path, ConvertOptions options);
+	VTFCubeConverter(std::string path, ConvertOptions* options);
 	bool Convert(std::string* faces) override;
 
 protected:
