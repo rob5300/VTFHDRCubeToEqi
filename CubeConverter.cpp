@@ -160,25 +160,17 @@ ILuint CubeConverter::DoConvertion(int maxCubeFaceSize)
             xPixel = abs(xPixel);
             yPixel = abs(yPixel);
 
-            //Clamp pixels to avoid border pixels
-            xPixel = min(max(0.001f, xPixel), 0.999f);
-            yPixel = min(max(0.001f, yPixel), 0.999f);
-
             //Get pixel from cube face tex and set in main texture
             if (cubeFace >= 0 && cubeFace < 6)
             {
-                auto color = GetSourcePixel(xPixel, yPixel, cubeFace);
+                float color[3];
+                int cubeFaceWidth;
+                int cubeFaceHeight;
+                GetCubeFaceSize(cubeFace, &cubeFaceWidth, &cubeFaceHeight);
+                GetSourcePixelBilinear(xPixel, yPixel, cubeFace, cubeFaceWidth, cubeFaceHeight, color);
 
-                if (color != nullptr)
-                {
-                    OffsetTargetXY(i, j, outputWidth, outputHeight, options);
-                    SetTargetPixel(i, j, color);
-                }
-                else
-                {
-                    printf("Failed to get valid colour from face '%i' at pos %f, %f\n", cubeFace, xPixel, yPixel);
-                    return UINT_MAX;
-                }
+                OffsetTargetXY(i, j, outputWidth, outputHeight, options);
+                SetTargetPixel(i, j, color);
             }
             else
             {
@@ -197,16 +189,6 @@ void CubeConverter::CreateNewImage(int width, int height)
     ilTexImage(width, height, 1, 3, IL_RGB, IL_FLOAT, NULL);
 }
 
-unsigned char* CubeConverter::GetSourcePixel(float x, float y, int cubeFace)
-{
-	return nullptr;
-}
-
-void CubeConverter::SetTargetPixel(int x, int y, void* colour)
-{
-
-}
-
 void CubeConverter::ActivateTargetImage()
 {
     ilBindImage(targetImageId);
@@ -214,11 +196,9 @@ void CubeConverter::ActivateTargetImage()
     ilActiveLayer(0);
 }
 
-//Get pointer to start of pixel data for this specific image
-vlByte* CubeConverter::GetPixel(int& x, int& y, vlUInt& width, vlUInt& height, vlByte* data)
+void CubeConverter::SetTargetPixel(int x, int y, float* colour)
 {
-    int start = ((width * y) + x) * 4;
-    return &data[start];
+    ilSetPixels(x, y, 0, 1, 1, 1, IL_RGB, IL_FLOAT, colour);
 }
 
 int CubeConverter::FindFaceForFilename(std::string &filename)
@@ -251,15 +231,50 @@ void CubeConverter::FindCubemapFacesInFolder(std::string &folder, std::string* c
 }
 
 //Decode bgra to floating point HDR (https://developer.valvesoftware.com/wiki/Valve_Texture_Format)
-void CubeConverter::bgra2float(float *red, float *green, float *blue, unsigned char bgra[4])
+void CubeConverter::bgra2float(unsigned char* bgra_input, float* rgb_output)
 {
     const int ratio = 262144;
-    if (bgra[3]) {
-        float a = bgra[3] * 16;
-        *red = (bgra[2] * a) / ratio;
-        *green = (bgra[1] * a) / ratio;
-        *blue = (bgra[0] * a) / ratio;
+    if (bgra_input[3]) {
+        float a = bgra_input[3] * 16;
+        rgb_output[0] = (bgra_input[2] * a) / ratio;
+        rgb_output[1] = (bgra_input[1] * a) / ratio;
+        rgb_output[2] = (bgra_input[0] * a) / ratio;
     }
     else
-        *red = *green = *blue = 0.0;
+        rgb_output[0] = rgb_output[1] = rgb_output[2] = 0.0;
+}
+
+//Get source pixel but perform bilinear interpolation
+void CubeConverter::GetSourcePixelBilinear(float x, float y, int& cubeFace, int& width, int& height, float* result)
+{
+    x *= width;
+    y *= height;
+
+    int gxi = int(x);
+    int gyi = int(y);
+
+    float* c00 = GetSourcePixel(gxi, gyi, cubeFace);
+
+    float* c10 = GetSourcePixel(gxi + 1, gyi, cubeFace);
+
+    float* c01 = GetSourcePixel(gxi, gyi + 1, cubeFace);
+
+    float* c11 = GetSourcePixel(gxi + 1, gyi + 1, cubeFace);
+
+    x = x - gxi;
+    y = y - gyi;
+
+    float a[3];
+    float b[3];
+
+    for (int i = 0; i < 3; i++)
+    {
+        a[i] = c00[i] * (1.f - x) + c10[i] * x;
+        b[i] = c01[i] * (1.f - x) + c11[i] * x;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        result[i] = a[i] * (1.f - y) + b[i] * y;
+    }
 }

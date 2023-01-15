@@ -34,44 +34,56 @@ bool VTFCubeConverter::Convert(std::string* faces)
         }
         else
         {
-            maxSize = max(maxSize, (int)faceVTFs[i].GetWidth());
-            maxSize = max(maxSize, (int)faceVTFs[i].GetHeight());
+            int width = (int)faceVTFs[i].GetWidth();
+            int height = (int)faceVTFs[i].GetHeight();
+            maxSize = max(maxSize, width);
+            maxSize = max(maxSize, height);
+
+            //Decode vtf data from encodeded hdr bgra
+            float* decodedData = new float[width * height * 3];
+            decodedFaces[i] = decodedData;
+            auto vtfData = faceVTFs[i].GetData(0, 0, 0, 0);
+            int32_t t = 0;
+            for (int32_t s = 0; s < width * height * 4; s+= 4, t += 3)
+            {
+                bgra2float(&vtfData[s], &decodedData[t]);
+            }
         }
     }
 
     DoConvertion(maxSize);
 }
 
-unsigned char* VTFCubeConverter::GetSourcePixel(float x, float y, int cubeFace)
+float* VTFCubeConverter::GetSourcePixel(int x, int y, int cubeFace)
 {
     auto* faceVTF = &faceVTFs[cubeFace];
-    auto width = faceVTF->GetWidth();
-    auto height = faceVTF->GetHeight();
+    int width = faceVTF->GetWidth();
+    int height = faceVTF->GetHeight();
 
-    //Handle rectangular faces as if they were square and clamp y to bottom.
-    bool halfHorizon = height == width * 0.5;
-    if (halfHorizon)
-    {
-        height = width;
-        y = min(y, 0.5f);
-    }
+    x = min(width - 1, x);
+    y = min(height - 1, y);
 
-    int realX = x * width;
-    int realY = y * height;
-
-    if (halfHorizon)
-    {
-        realY = min((int)(faceVTF->GetHeight()) - 1, realY);
-    }
-
-    //printf("* Set pixel (%i, %i) from. Source pixel (%i, %i) from face '%s'\n", i, j, (int)(xPixel * width), (int)(yPixel * height), CubemapFaceNames[cubeFace].c_str());
-    auto vtfData = faceVTF->GetData(0, 0, 0, 0);
-    return GetPixel(realX, realY, width, height, vtfData);
+    int start = ((width * y) + x) * 3;
+    return &decodedFaces[cubeFace][start];
 }
 
-void VTFCubeConverter::SetTargetPixel(int x, int y, void* colour)
+void VTFCubeConverter::GetCubeFaceSize(int cubeFace, int* width, int* height)
 {
-    float newPixelData[3];
-    bgra2float(&newPixelData[0], &newPixelData[1], &newPixelData[2], static_cast<unsigned char *>(colour));
-    ilSetPixels(x, y, 0, 1, 1, 1, IL_RGB, IL_FLOAT, newPixelData);
+    auto face = &faceVTFs[cubeFace];
+    *width = face->GetWidth();
+    *height = face->GetHeight();
+
+    //Pretend half height cube faces are square
+    if (*height * 2 == *width)
+    {
+        *height = *width;
+    }
+}
+
+VTFCubeConverter::~VTFCubeConverter()
+{
+    for (int i = 0; i < 6; i++)
+    {
+        delete[] decodedFaces[i];
+    }
 }
