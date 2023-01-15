@@ -42,31 +42,17 @@ bool VTFCubeConverter::Convert(std::string* faces)
     DoConvertion(maxSize);
 }
 
-unsigned char* VTFCubeConverter::GetSourcePixel(float x, float y, int cubeFace)
+unsigned char* VTFCubeConverter::GetSourcePixel(int x, int y, int cubeFace)
 {
     auto* faceVTF = &faceVTFs[cubeFace];
-    auto width = faceVTF->GetWidth();
-    auto height = faceVTF->GetHeight();
+    int width = faceVTF->GetWidth();
+    int height = faceVTF->GetHeight();
 
-    //Handle rectangular faces as if they were square and clamp y to bottom.
-    bool halfHorizon = height == width * 0.5;
-    if (halfHorizon)
-    {
-        height = width;
-        y = min(y, 0.5f);
-    }
+    x = min(width - 1, x);
+    y = min(height - 1, y);
 
-    int realX = x * width;
-    int realY = y * height;
-
-    if (halfHorizon)
-    {
-        realY = min((int)(faceVTF->GetHeight()) - 1, realY);
-    }
-
-    //printf("* Set pixel (%i, %i) from. Source pixel (%i, %i) from face '%s'\n", i, j, (int)(xPixel * width), (int)(yPixel * height), CubemapFaceNames[cubeFace].c_str());
     auto vtfData = faceVTF->GetData(0, 0, 0, 0);
-    return GetPixel(realX, realY, width, height, vtfData);
+    return GetPixel(x, y, width, height, vtfData);
 }
 
 void VTFCubeConverter::SetTargetPixel(int x, int y, void* colour)
@@ -74,4 +60,17 @@ void VTFCubeConverter::SetTargetPixel(int x, int y, void* colour)
     float newPixelData[3];
     bgra2float(&newPixelData[0], &newPixelData[1], &newPixelData[2], static_cast<unsigned char *>(colour));
     ilSetPixels(x, y, 0, 1, 1, 1, IL_RGB, IL_FLOAT, newPixelData);
+}
+
+void VTFCubeConverter::GetCubeFaceSize(int cubeFace, int* width, int* height)
+{
+    auto face = &faceVTFs[cubeFace];
+    *width = face->GetWidth();
+    *height = face->GetHeight();
+
+    //Pretend half height cube faces are square
+    if (*height * 2 == *width)
+    {
+        *height = *width;
+    }
 }

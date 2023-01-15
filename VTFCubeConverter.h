@@ -8,8 +8,9 @@ public:
 	bool Convert(std::string* faces) override;
 
 protected:
-	unsigned char* GetSourcePixel(float x, float y, int cubeFace) override;
+	unsigned char* GetSourcePixel(int x, int y, int cubeFace) override;
 	void SetTargetPixel(int x, int y, void* colour) override;
+	void GetCubeFaceSize(int cubeFace, int* width, int* height);
 
 private:
 	VTFLib::CVTFFile faceVTFs[6];

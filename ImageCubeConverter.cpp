@@ -4,4 +4,10 @@ ImageCubeConverter::ImageCubeConverter(std::string path, ConvertOptions* options
 {
 }
 
+void ImageCubeConverter::GetCubeFaceSize(int cubeFace, int* width, int* height)
+{}
+
+void ImageCubeConverter::SetTargetPixel(int x, int y, void* colour)
+{}
+
 
