@@ -10,6 +10,7 @@ public:
 protected:
 	void GetCubeFaceSize(int cubeFace, int* width, int* height);
 	void SetTargetPixel(int x, int y, void* colour);
+	float* GetSourcePixel(int x, int y, int cubeFace);
 
 private:
 	ILuint faceIds[6];

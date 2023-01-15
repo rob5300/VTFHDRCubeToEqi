@@ -10,4 +10,9 @@ void ImageCubeConverter::GetCubeFaceSize(int cubeFace, int* width, int* height)
 void ImageCubeConverter::SetTargetPixel(int x, int y, void* colour)
 {}
 
+float* ImageCubeConverter::GetSourcePixel(int x, int y, int cubeFace)
+{
+    return nullptr;
+}
+
 
