@@ -10,22 +10,11 @@ VTFCubeConverter::VTFCubeConverter(std::string path, ConvertOptions* options) : 
 
 bool VTFCubeConverter::Convert(std::string* faces)
 {
-    //Verify faces
-    for (int i = 0; i < 6; i++)
-    {
-        if (faces[i].length() == 0)
-        {
-            printf("Failed to find all 6 faces of cubemap.");
-            return false;
-        }
-    }
-
-    printf("Found all 6 cubemap faces\n");
-
     int maxSize = 0;
 
     for (int i = 0; i < 6; i++)
     {
+        printf("Loading vtf '%s'...\n", faces[i].c_str());
         auto success = faceVTFs[i].Load(faces[i].c_str());
         if (!success)
         {

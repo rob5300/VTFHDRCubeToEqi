@@ -5,6 +5,20 @@
 #include "ConvertOptions.h"
 #include "IL.h"
 
+//Decode rgba to floating point HDR (https://developer.valvesoftware.com/wiki/Valve_Texture_Format)
+inline void rgba2float_valve(unsigned char* r, unsigned char* g, unsigned char* b, unsigned char* a, float* rgb_output)
+{
+    const int ratio = 262144;
+    if (a) {
+        float _a = *a * 16;
+        rgb_output[0] = (*r * _a) / ratio;
+        rgb_output[1] = (*g * _a) / ratio;
+        rgb_output[2] = (*b * _a) / ratio;
+    }
+    else
+        rgb_output[0] = rgb_output[1] = rgb_output[2] = 0.0;
+}
+
 class CubeConverter
 {
 public:

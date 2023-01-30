@@ -15,6 +15,20 @@ bool ConvertCubemapToEquirectangular(string cubemapFaceFolder, ConvertOptions* o
 {
     string faces[6];
     CubeConverter::FindCubemapFacesInFolder(cubemapFaceFolder, faces);
+
+    //Verify faces
+    for (int i = 0; i < 6; i++)
+    {
+        if (faces[i].length() == 0)
+        {
+            printf("Failed to find all 6 faces of cubemap.");
+            return false;
+        }
+    }
+
+    printf("Found all 6 cubemap faces\n");
+
+
     CubeConverter* converter;
     filesystem::path firstFilePath = filesystem::path(faces[0]);
     auto extension = firstFilePath.extension().string();

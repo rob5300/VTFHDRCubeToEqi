@@ -7,9 +7,10 @@
 
 using namespace VTFLib;
 using namespace std;
+using namespace std::filesystem;
 
 string CubeConverter::CubemapFaceNames[6] = {
-	"up.vtf", "lf.vtf", "ft.vtf", "rt.vtf", "bk.vtf", "dn.vtf"
+	"up", "lf", "ft", "rt", "bk", "dn"
 };
 
 inline void OffsetTargetXY(int& x, int& y, int width, int height, ConvertOptions* options)
@@ -205,8 +206,10 @@ int CubeConverter::FindFaceForFilename(std::string &filename)
 {
 	for (int i = 0; i < 6; i++)
 	{
-        std::string* ending = &CubemapFaceNames[i];
-		if (equal(ending->rbegin(), ending->rend(), filename.rbegin()))
+        string* potentialFaceName = &CubemapFaceNames[i];
+        filesystem::path filenameAsPath(filename);
+        auto name = filenameAsPath.stem().string();
+		if (equal(potentialFaceName->rbegin(), potentialFaceName->rend(), name.rbegin()))
 		{
 			return i;
 		}
@@ -216,7 +219,7 @@ int CubeConverter::FindFaceForFilename(std::string &filename)
 
 void CubeConverter::FindCubemapFacesInFolder(std::string &folder, std::string* cubemapFacesPaths)
 {
-    for (const auto& entry : std::filesystem::directory_iterator(folder))
+    for (const auto& entry : directory_iterator(folder))
     {
         if (entry.is_regular_file())
         {
@@ -230,18 +233,10 @@ void CubeConverter::FindCubemapFacesInFolder(std::string &folder, std::string* c
     }
 }
 
-//Decode bgra to floating point HDR (https://developer.valvesoftware.com/wiki/Valve_Texture_Format)
+//Decode bgra to float hdr
 void CubeConverter::bgra2float(unsigned char* bgra_input, float* rgb_output)
 {
-    const int ratio = 262144;
-    if (bgra_input[3]) {
-        float a = bgra_input[3] * 16;
-        rgb_output[0] = (bgra_input[2] * a) / ratio;
-        rgb_output[1] = (bgra_input[1] * a) / ratio;
-        rgb_output[2] = (bgra_input[0] * a) / ratio;
-    }
-    else
-        rgb_output[0] = rgb_output[1] = rgb_output[2] = 0.0;
+    rgba2float_valve(&bgra_input[2], &bgra_input[1], &bgra_input[0], &bgra_input[3], rgb_output);
 }
 
 //Get source pixel but perform bilinear interpolation

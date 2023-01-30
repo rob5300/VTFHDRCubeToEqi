@@ -6,6 +6,7 @@ inline void ArgHelp()
     printf("Argument Help:\n");
     printf(" -xoffset (0-1), -yoffset (0-1): How much to offset the output image by.\n");
     printf(" -scale 0<: Scale adjustment for output hdr. Default is 1\n");
+    printf(" -exposureshift: Adjust exposure by this decimal value (non VTF only). Default is 0.0\n");
     printf(" -help: Show this help info.\n");
 }
 
@@ -44,6 +45,13 @@ bool ConvertOptions::HandleArgument(char* arg, char* data)
 	{
 		ArgHelp();
 		exit(0);
+	}
+	else if (strcmp(arg, "-exposureshift") == 0)
+	{
+		assert(data != nullptr, "exposureshift did not have data");
+		exposureShift = std::stof(data);
+		printf("Exposure shift set to '%f'\n", exposureShift);
+		return true;
 	}
 	else
 	{
